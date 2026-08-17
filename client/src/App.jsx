@@ -23,7 +23,7 @@ export default function App() {
     setCompleted(false);
     setFinalSlots(null);
     axios
-      .get(`/api/players/${mode}`)
+      .get(`https://fifa-squad-generator-game.onrender.com/api/players/${mode}`)
       .then((res) => {
         if (cancelled) return;
         setPool(res.data);
