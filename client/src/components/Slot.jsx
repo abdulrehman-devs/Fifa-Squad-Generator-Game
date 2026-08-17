@@ -1,6 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import useShuffle from '../hooks/useShuffle.js';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// Backend returns relative image paths like `/images/placeholder.svg`. Prefix
+// them with the API origin so the browser hits the Render backend, not Vercel.
+const toAbsolute = (url) =>
+  url && url.startsWith('/') ? `${API_URL}${url}` : url;
+
 export default function Slot({ slotConfig, slotState, pool, cycleId, onTick, onLock }) {
   const { key, label, eligible } = slotConfig;
   const { locked, display } = slotState;
@@ -43,14 +49,14 @@ export default function Slot({ slotConfig, slotState, pool, cycleId, onTick, onL
           ) : (
             <motion.img
               key={display.id}
-              src={display.imageUrl}
+              src={toAbsolute(display.imageUrl)}
               alt={display.name}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.12 }}
               onError={(e) => {
-                e.currentTarget.src = '/images/placeholder.svg';
+                e.currentTarget.src = `${API_URL}/images/placeholder.svg`;
               }}
             />
           )}

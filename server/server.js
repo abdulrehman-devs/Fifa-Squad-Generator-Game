@@ -6,7 +6,14 @@ const playersRouter = require('./routes/players');
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL }));
+const allowedOrigins = [
+  process.env.CLIENT_URL,                              // configured frontend (Render env var)
+  'https://fifa-squad-generator-game.vercel.app',      // production frontend
+  'http://localhost:5173',                             // local dev (Vite)
+  'http://localhost:5000',                             // local backend
+].filter(Boolean);
+
+app.use(cors({ origin: allowedOrigins }));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
 app.use('/api/players', playersRouter);
