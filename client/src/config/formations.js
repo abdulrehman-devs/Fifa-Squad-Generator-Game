@@ -1,42 +1,40 @@
 // 4-3-3 formation. Each slot lists its eligible positions — a player qualifies
 // for the slot if any of their `positions` entries intersects with `eligible`.
 //
-// Slots are absolutely positioned inside the pitch. `left` and `top` are
-// percentages of the pitch box (0–100). `anchor` controls horizontal
-// alignment of the card inside its cell: 'left' anchors to the cell's left
-// edge (so the card's left edge sits at `left%`), 'center' (default) centres
-// the card, 'right' anchors to the right edge.
+// Slots are grouped into rows; `Pitch.jsx` renders one flex row per group and
+// the rows form a pyramid (top→bottom width: 60% / 75% / 100% / 25%):
+//   - FWD: front-3 (LW, ST, RW)
+//   - MID: middle-3 (CM1, CM2, CM3)
+//   - DEF: back-4 (LB, CB1, CB2, RB)
+//   - GK:  single goalkeeper
 //
-// Reference positions are measured from the formation reference image.
-// Card width is controlled separately in CSS (~26% of pitch width on desktop).
-//
-// Columns (% of pitch width from the left edge of the pitch):
-//   - GK, ST, CM2  → 50   (dead centre)
-//   - LW, CM1      → 20.5
-//   - RW, CM3      → 79.5
-//   - LB           → 0
-//   - CB1          → 28.8
-//   - CB2          → 71.2
-//   - RB           → 100
-//
-// Rows (% of pitch height from the top edge of the pitch):
-//   - Front-3      → 8
-//   - Mid-3        → 36
-//   - Back-4       → 63
-//   - GK           → 88
+// Card sizing, gaps, and row widths live in styles.css under `.formation-row`
+// and `.formation-row--<name>`. Slots only need to know which row they belong
+// to and their order within it (the order in this array = left-to-right).
+
 export const FORMATION_433 = [
-  { key: 'GK',  label: 'GK', eligible: ['GK'],   left: 50,  top: 88, anchor: 'center' },
-  { key: 'LB',  label: 'LB', eligible: ['LB'],   left: 0,   top: 63, anchor: 'left'   },
-  { key: 'CB1', label: 'CB', eligible: ['CB'],   left: 28.8, top: 63, anchor: 'center' },
-  { key: 'CB2', label: 'CB', eligible: ['CB'],   left: 71.2, top: 63, anchor: 'center' },
-  { key: 'RB',  label: 'RB', eligible: ['RB'],   left: 100, top: 63, anchor: 'right'  },
-  { key: 'CM1', label: 'CM', eligible: ['CM'],   left: 20.5, top: 36, anchor: 'center' },
-  { key: 'CM2', label: 'CM', eligible: ['CM'],   left: 50,  top: 36, anchor: 'center' },
-  { key: 'CM3', label: 'CM', eligible: ['CM'],   left: 79.5, top: 36, anchor: 'center' },
-  { key: 'LW',  label: 'LW', eligible: ['LW'],   left: 20.5, top: 8,  anchor: 'center' },
-  { key: 'ST',  label: 'ST', eligible: ['ST'],   left: 50,  top: 8,  anchor: 'center' },
-  { key: 'RW',  label: 'RW', eligible: ['RW'],   left: 79.5, top: 8,  anchor: 'center' },
+  // Front-3
+  { key: 'LW',  label: 'LW', eligible: ['LW'], row: 'FWD', order: 0 },
+  { key: 'ST',  label: 'ST', eligible: ['ST'], row: 'FWD', order: 1 },
+  { key: 'RW',  label: 'RW', eligible: ['RW'], row: 'FWD', order: 2 },
+
+  // Middle-3
+  { key: 'CM1', label: 'CM', eligible: ['CM'], row: 'MID', order: 0 },
+  { key: 'CM2', label: 'CM', eligible: ['CM'], row: 'MID', order: 1 },
+  { key: 'CM3', label: 'CM', eligible: ['CM'], row: 'MID', order: 2 },
+
+  // Back-4
+  { key: 'LB',  label: 'LB', eligible: ['LB'], row: 'DEF', order: 0 },
+  { key: 'CB1', label: 'CB', eligible: ['CB'], row: 'DEF', order: 1 },
+  { key: 'CB2', label: 'CB', eligible: ['CB'], row: 'DEF', order: 2 },
+  { key: 'RB',  label: 'RB', eligible: ['RB'], row: 'DEF', order: 3 },
+
+  // GK
+  { key: 'GK',  label: 'GK', eligible: ['GK'], row: 'GK',  order: 0 },
 ];
+
+// Row order, top → bottom. Used by Pitch.jsx to render rows in pyramid order.
+export const ROW_ORDER = ['FWD', 'MID', 'DEF', 'GK'];
 
 export const MODES = [
   { id: 'real-madrid', label: 'Real Madrid',  color: '#FEBE10' },

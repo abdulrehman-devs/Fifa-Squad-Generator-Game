@@ -26,7 +26,10 @@ export default function GameScreen({ mode, initialPool, onComplete, onBack }) {
     setSlots((prev) => {
       const slot = prev[slotKey];
       if (!slot || slot.locked) return prev;
-      if (slot.display?.id === player?.id) return prev;
+      // Always apply the tick — even when the picked player matches the
+      // current display — so React re-renders the slot and framer-motion
+      // can run its enter/exit animations. This guarantees every open
+      // slot visibly cycles on every tick.
       return { ...prev, [slotKey]: { ...slot, display: player } };
     });
   };

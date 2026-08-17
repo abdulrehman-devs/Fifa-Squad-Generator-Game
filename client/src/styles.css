@@ -17,9 +17,9 @@
 * { box-sizing: border-box; }
 
 html, body, #root {
-  height: 100%;
+  min-height: 100%;
   margin: 0;
-  overflow: hidden;            /* page never scrolls */
+  overflow-y: auto;             /* page may scroll so GK row stays visible */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--text);
   background:
@@ -32,13 +32,12 @@ button {
 }
 
 .screen {
-  height: 100vh;                /* exactly the viewport */
+  min-height: 100vh;            /* at least the viewport, but may grow */
   padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  overflow: hidden;             /* inner content never scrolls */
 }
 
 /* ---- Mode select ---- */
@@ -139,18 +138,16 @@ button {
 }
 
 /* ---- Pitch ----
- * Fills the remaining vertical space between header and footer.
- * `min-height: 0` is required on a flex child so it can actually shrink.
+ * Sizes itself to content. Width is capped at 1000px; height grows from
+ * the aspect-ratio so the formation always has room for all four rows
+ * (FWD / MID / DEF / GK) including the GK card. If the viewport is short,
+ * the page scrolls instead of clipping the GK row.
  */
 .game > .pitch {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
   width: 100%;
   max-width: 1000px;
-  /* width:height ratio roughly 5:6 — taller than wide, but narrower than before
-     so it fits comfortably on phones without scrolling. */
   aspect-ratio: 5 / 6;
-  max-height: 100%;
   align-self: center;
   position: relative;
   background:
@@ -200,22 +197,56 @@ button {
 .penalty-box.top { top: 0; border-top: none; }
 .penalty-box.bottom { bottom: 0; border-bottom: none; }
 
+/* ---- Formation (4-3-3 pyramid) ----
+ *
+ * `.formation` is a column-flex container that fills the pitch. Each row
+ * is its own block-level flex container with a fixed height, holding the
+ * cards for that line. `justify-content: space-evenly` distributes cards
+ * horizontally with equal gaps. The `gap` between rows guarantees rows
+ * never overlap regardless of pitch height.
+ *
+ * Row order (top → bottom): FWD (3), MID (3), DEF (4), GK (1).
+ *
+ * Cards are fixed at 140 × 180 px (`flex-shrink: 0`), so a row's height
+ * is at least `card-height + 2 × card-padding` and rows are visually
+ * separated by the parent's `row-gap`.
+ */
 .formation {
   position: absolute;
   inset: 0;
-  /* Slots are absolutely positioned at (left%, top%) inside the pitch.
-     See formations.js for the percentage coordinates; this matches the
-     reference image exactly. */
-}
-
-/* ---- Player card (slot) ---- */
-.slot {
-  position: absolute;
-  /* Width matches the reference image (~26% of pitch width). */
-  width: 26%;
   display: flex;
   flex-direction: column;
+  justify-content: space-evenly;
+  gap: var(--formation-row-gap, 14px);
+  padding: var(--formation-row-padding, 12px);
+}
+
+/* Per-row fixed-height flex container. `justify-content: space-evenly`
+   centres cards horizontally and gives equal gaps; `flex-wrap: nowrap`
+   keeps a single row per line; `flex-shrink: 0` stops the row from
+   collapsing when the pitch is short. */
+.formation-row {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
+  justify-content: space-evenly;
+  gap: var(--formation-card-gap, 14px);
+  min-height: var(--formation-row-min-height, 190px);
+}
+
+/* ---- Player card (slot) ----
+ * Fixed-size card (140 × 180 px). `flex-shrink: 0` guarantees the card
+ * never compresses; `width`/`height` override any percentage sizing so
+ * every card across the formation is exactly the same size. */
+.slot {
+  flex: 0 0 auto;
+  width: 140px;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: flex-end;
   gap: 0;
   padding: 0;
@@ -224,6 +255,13 @@ button {
   color: var(--text);
   transition: transform 150ms ease;
 }
+
+/* Drop the CM-pivot raise — with per-row fixed containers every card
+   sits at exactly its row's vertical anchor. */
+.slot--cm-pivot {
+  margin-top: 0;
+}
+
 .slot.open:hover { transform: translateY(-3px); }
 .slot.locked { cursor: default; }
 .slot:disabled { cursor: default; }
@@ -232,8 +270,7 @@ button {
   display: none; /* position label hidden in card style; the ribbon is the label */
 }
 
-/* The white photo card fills the slot horizontally. The slot itself is
-   26% of the pitch width (matches the reference image). */
+/* The white photo card fills the slot horizontally. */
 .slot-photo {
   width: 100%;
   height: auto;
@@ -262,30 +299,33 @@ button {
   text-align: center;
 }
 
-/* Name ribbon (blue) + club label (magenta) under the photo */
+/* Name ribbon (blue) + club label (magenta) under the photo.
+   Kept compact so the card photo dominates — the ribbon is a caption,
+   not a banner. */
 .slot-name {
   width: 100%;
   margin-top: -2px;
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: 0.5rem;
+  font-weight: 700;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   color: #ffffff;
   background: linear-gradient(180deg, var(--card-ribbon), var(--card-ribbon-2));
-  padding: 0.28rem 0.3rem 0.18rem;
+  padding: 0.18rem 0.2rem 0.1rem;
   border-radius: 0 0 4px 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+  line-height: 1.15;
 }
 .slot-name::after {
   content: '';
   display: block;
-  height: 2px;
-  margin: 0.15rem auto 0;
-  width: 60%;
+  height: 1px;
+  margin: 0.08rem auto 0;
+  width: 55%;
   background: var(--card-club);
   border-radius: 2px;
 }
@@ -346,11 +386,12 @@ button {
 }
 
 @media (max-width: 640px) {
-  /* On phones the pitch becomes the dominant element; cards get a touch
-     wider so names remain readable. */
+  /* On phones the pitch grows a touch taller, cards shrink, rows breathe. */
   .pitch { aspect-ratio: 5 / 7; }
-  .slot { width: 24%; }
-  .slot-name { font-size: 0.6rem; padding: 0.2rem 0.2rem 0.12rem; }
+  .slot { width: 110px; height: 150px; }
+  .formation-row { min-height: 160px; gap: 10px; }
+  .formation { gap: 10px; padding: 10px; }
+  .slot-name { font-size: 0.45rem; padding: 0.14rem 0.16rem 0.08rem; }
   .mode-select h1 { font-size: 1.8rem; }
   .game-header h2 { font-size: 0.95rem; }
   .game-header .back { padding: 0.3rem 0.5rem; font-size: 0.75rem; }
@@ -358,8 +399,10 @@ button {
 }
 
 @media (max-width: 380px) {
-  /* very narrow phones: cards stretch a bit more so names stay readable */
-  .slot { width: 34%; }
-  .slot-name { font-size: 0.55rem; }
+  /* very narrow phones: cards and gaps shrink further so 4 cards still fit. */
+  .slot { width: 90px; height: 130px; }
+  .formation-row { min-height: 140px; gap: 8px; }
+  .formation { gap: 8px; padding: 8px; }
+  .slot-name { font-size: 0.4rem; }
   .slot-name::after { display: none; }
 }

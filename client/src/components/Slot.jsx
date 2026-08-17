@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import useShuffle from '../hooks/useShuffle.js';
 
 export default function Slot({ slotConfig, slotState, pool, cycleId, onTick, onLock }) {
-  const { key, label, eligible, left, top, anchor } = slotConfig;
+  const { key, label, eligible } = slotConfig;
   const { locked, display } = slotState;
 
   // Drive the shuffle only while this slot is open. The hook restarts on
@@ -19,25 +19,10 @@ export default function Slot({ slotConfig, slotState, pool, cycleId, onTick, onL
 
   const isEmpty = !display;
 
-  // Anchor determines how the card aligns inside its absolutely-positioned
-  // cell. The slot is a 0-width point at (left%, top%) of the pitch; the
-  // anchor shifts it so the card's left/centre/right edge lands at that
-  // point. Cards are `width: 26%` of pitch width (matches reference).
-  const anchorTransform = {
-    left:   'translate(0, -50%)',
-    center: 'translate(-50%, -50%)',
-    right:  'translate(-100%, -50%)',
-  }[anchor || 'center'];
-
   return (
     <button
       type="button"
       className={`slot ${locked ? 'locked' : 'open'}`}
-      style={{
-        left: `${left}%`,
-        top: `${top}%`,
-        transform: anchorTransform,
-      }}
       onClick={() => !locked && !isEmpty && onLock(key)}
       disabled={locked || isEmpty}
       aria-label={locked ? `${label}: ${display.name}` : `${label} slot, click to lock`}

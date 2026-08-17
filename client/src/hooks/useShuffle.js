@@ -12,6 +12,10 @@ import { useEffect, useRef } from 'react';
 // shown player on display — the slot is then "ready to pick". The user must
 // click to lock it (which removes them from the pool) before the next cycle
 // begins for the remaining slots.
+//
+// Each tick avoids picking the same player it picked last time when possible,
+// so the slot visibly changes on every tick — even when the eligible pool
+// has only 2 players.
 export default function useShuffle({
   slotKey,
   eligible,
@@ -29,6 +33,7 @@ export default function useShuffle({
     if (!enabled) return undefined;
 
     let cancelled = false;
+    let lastPickId = null;
 
     const tick = () => {
       if (cancelled) return;
@@ -36,10 +41,20 @@ export default function useShuffle({
         p.positions.some((pos) => eligible.includes(pos))
       );
       if (eligiblePlayers.length === 0) {
+        lastPickId = null;
         onTickRef.current(slotKey, null);
         return;
       }
-      const pick = eligiblePlayers[Math.floor(Math.random() * eligiblePlayers.length)];
+
+      // Prefer a pick that's different from the last tick so the visible
+      // card always changes (when the eligible set is > 1). With 1 player
+      // we just repeat that one — there's no other choice.
+      const candidates =
+        eligiblePlayers.length > 1
+          ? eligiblePlayers.filter((p) => p.id !== lastPickId)
+          : eligiblePlayers;
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      lastPickId = pick?.id ?? null;
       onTickRef.current(slotKey, pick);
     };
 
