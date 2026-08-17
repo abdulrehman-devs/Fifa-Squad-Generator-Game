@@ -22,8 +22,9 @@ export default function App() {
     setError(null);
     setCompleted(false);
     setFinalSlots(null);
+    const apiUrl = 'https://fifa-squad-generator-game.onrender.com' || 'http://localhost:5000';
     axios
-      .get(`https://fifa-squad-generator-game.onrender.com/api/players/${mode}`)
+      .get(`${apiUrl}/api/players/${mode}`)
       .then((res) => {
         if (cancelled) return;
         setPool(res.data);
