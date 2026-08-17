@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://fifa-squad-generator-game.onrender.com/api/$1" },
+    { "source": "/images/(.*)", "destination": "https://fifa-squad-generator-game.onrender.com/images/$1" }
+  ]
+}

@@ -62,7 +62,13 @@ export default function Slot({ slotConfig, slotState, pool, cycleId, onTick, onL
           )}
         </AnimatePresence>
       </div>
-      <div className="slot-name">{display?.name || (isEmpty ? '—' : 'Shuffling…')}</div>
+      <div className="slot-name">
+        {display && typeof display.name === 'string'
+          ? display.name
+          : isEmpty
+          ? '—'
+          : 'Shuffling…'}
+      </div>
       {locked && <div className="lock-badge">✓</div>}
     </button>
   );

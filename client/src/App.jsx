@@ -22,16 +22,23 @@ export default function App() {
     setError(null);
     setCompleted(false);
     setFinalSlots(null);
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    // Prefer the absolute backend URL when configured; otherwise use a
+    // relative path so the request goes to the same origin (relies on a
+    // reverse-proxy / rewrite on the host — Vercel `rewrites` in vercel.json).
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    const url = apiUrl ? `${apiUrl}/api/players/${mode}` : `/api/players/${mode}`;
     axios
-      .get(`${apiUrl}/api/players/${mode}`)
+      .get(url)
       .then((res) => {
         if (cancelled) return;
         setPool(res.data);
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err.response?.data?.error || 'Failed to load players');
+        const data = err.response?.data;
+        const msg =
+          (typeof data === 'string' ? data : data?.error) || err.message || 'Failed to load players';
+        setError(typeof msg === 'string' ? msg : 'Failed to load players');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
